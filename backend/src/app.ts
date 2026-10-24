@@ -77,5 +77,21 @@ app.delete('/api/vehicles/:id', (req: Request, res: Response) => {
   vehicles.splice(index, 1);
   res.status(200).json({ message: 'Vehicle deleted successfully' });
 });
+// Endpoint to purchase a vehicle (decreasing quantity, min 0)
+app.post('/api/vehicles/:id/purchase', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const vehicle = vehicles.find((v) => v.id === id);
+
+  if (!vehicle) {
+    return res.status(404).json({ message: 'Vehicle not found' });
+  }
+
+  if (vehicle.quantity <= 0) {
+    return res.status(400).json({ message: 'Vehicle out of stock' });
+  }
+
+  vehicle.quantity -= 1;
+  res.status(200).json(vehicle);
+});
 
 export default app;

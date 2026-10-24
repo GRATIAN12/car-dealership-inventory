@@ -123,4 +123,27 @@ describe('Vehicle API Endpoints', () => {
     const found = getResponse.body.find((v: any) => v.id === 'v-del-1');
     expect(found).toBeUndefined();
   });
+  it('should purchase a vehicle and decrease its quantity via POST /api/vehicles/:id/purchase', async () => {
+    // Seed a vehicle with quantity 2
+    await request(app).post('/api/vehicles').send({
+      id: 'v-purchase-1',
+      make: 'Mazda',
+      model: 'Mazda3',
+      category: 'Sedan',
+      price: 20000,
+      quantity: 2
+    });
+
+    // Purchase the vehicle
+    const purchaseResponse = await request(app).post('/api/vehicles/v-purchase-1/purchase');
+    expect(purchaseResponse.status).toBe(200);
+    expect(purchaseResponse.body.quantity).toBe(1);
+
+    // Purchase again until quantity is 0
+    await request(app).post('/api/vehicles/v-purchase-1/purchase');
+
+    // Attempting to purchase when quantity is 0 should fail with 400 Bad Request
+    const failedResponse = await request(app).post('/api/vehicles/v-purchase-1/purchase');
+    expect(failedResponse.status).toBe(400);
+  });
 });
