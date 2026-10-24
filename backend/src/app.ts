@@ -7,21 +7,19 @@ const app = express();
 app.use(express.json());
 
 // In-memory array to simulate our database for now
-// (We will swap this for a real database later)
 const vehicles: Vehicle[] = [];
 
-// The endpoint to add a new vehicle
+// Endpoint to add a new vehicle (POST)
 app.post('/api/vehicles', (req: Request, res: Response) => {
   const { id, make, model, category, price, quantity } = req.body;
-
-  // Create a new Vehicle instance
   const newVehicle = new Vehicle(id, make, model, category, price, quantity);
-  
-  // Add it to our "database"
   vehicles.push(newVehicle);
-
-  // Return the created vehicle with a 201 Created status code
   res.status(201).json(newVehicle);
+});
+
+// NEW: Endpoint to retrieve all vehicles (GET)
+app.get('/api/vehicles', (req: Request, res: Response) => {
+  res.status(200).json(vehicles);
 });
 
 export default app;
