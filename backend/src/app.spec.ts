@@ -103,7 +103,13 @@ describe('Vehicle API Endpoints', () => {
     expect(response.body.price).toBe(24000);
     expect(response.body.quantity).toBe(5);
   });
+
   it('should delete an existing vehicle via DELETE /api/vehicles/:id', async () => {
+    // Register & login as admin to get token
+    await request(app).post('/api/auth/register').send({ username: 'deladmin', password: 'password123', role: 'admin' });
+    const loginRes = await request(app).post('/api/auth/login').send({ username: 'deladmin', password: 'password123' });
+    const token = loginRes.body.token;
+
     // Seed a vehicle to delete
     await request(app).post('/api/vehicles').send({
       id: 'v-del-1',
@@ -114,8 +120,10 @@ describe('Vehicle API Endpoints', () => {
       quantity: 2
     });
 
-    // Delete the vehicle
-    const deleteResponse = await request(app).delete('/api/vehicles/v-del-1');
+    // Delete the vehicle with admin token
+    const deleteResponse = await request(app)
+      .delete('/api/vehicles/v-del-1')
+      .set('Authorization', `Bearer ${token}`);
     expect(deleteResponse.status).toBe(200);
 
     // Verify it is removed by attempting to fetch all vehicles
@@ -123,6 +131,7 @@ describe('Vehicle API Endpoints', () => {
     const found = getResponse.body.find((v: any) => v.id === 'v-del-1');
     expect(found).toBeUndefined();
   });
+
   it('should purchase a vehicle and decrease its quantity via POST /api/vehicles/:id/purchase', async () => {
     // Seed a vehicle with quantity 2
     await request(app).post('/api/vehicles').send({
@@ -146,7 +155,13 @@ describe('Vehicle API Endpoints', () => {
     const failedResponse = await request(app).post('/api/vehicles/v-purchase-1/purchase');
     expect(failedResponse.status).toBe(400);
   });
+
   it('should restock a vehicle and increase its quantity via POST /api/vehicles/:id/restock', async () => {
+    // Register & login as admin to get token
+    await request(app).post('/api/auth/register').send({ username: 'restockadmin', password: 'password123', role: 'admin' });
+    const loginRes = await request(app).post('/api/auth/login').send({ username: 'restockadmin', password: 'password123' });
+    const token = loginRes.body.token;
+
     // Seed a vehicle with quantity 3
     await request(app).post('/api/vehicles').send({
       id: 'v-restock-1',
@@ -157,9 +172,10 @@ describe('Vehicle API Endpoints', () => {
       quantity: 3
     });
 
-    // Restock the vehicle adding 5 units
+    // Restock the vehicle adding 5 units with admin token
     const restockResponse = await request(app)
       .post('/api/vehicles/v-restock-1/restock')
+      .set('Authorization', `Bearer ${token}`)
       .send({ quantity: 5 });
 
     expect(restockResponse.status).toBe(200);
