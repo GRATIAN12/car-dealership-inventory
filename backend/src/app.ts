@@ -1,11 +1,19 @@
 import express, { Request, Response } from 'express';
 import { Vehicle } from './vehicle';
 
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET = 'your-super-secret-key';
+const users: any[] = [];
+
 const app = express();
 
 app.use(express.json());
 
 const vehicles: Vehicle[] = [];
+
+
 
 // 1. Add a new vehicle (POST)
 app.post('/api/vehicles', (req: Request, res: Response) => {
@@ -108,5 +116,47 @@ app.post('/api/vehicles/:id/restock', (req: Request, res: Response) => {
   vehicle.quantity += addAmount;
 
   res.status(200).json(vehicle);
+});
+// Endpoint to register a new user
+app.post('/api/auth/register', async (req: Request, res: Response) => {
+  try {
+    const { username, password, role } = req.body;
+    
+    const existingUser = users.find((u) => u.username === username);
+    if (existingUser) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = { username, password: hashedPassword, role: role || 'user' };
+    users.push(newUser);
+
+    res.status(201).json({ message: 'User registered successfully', username: newUser.username });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Endpoint to log in a user and return a JWT token
+app.post('/api/auth/login', async (req: Request, res: Response) => {
+  try {
+    const { username, password } = req.body;
+
+    const user = users.find((u) => u.username === username);
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid username or password' });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Invalid username or password' });
+    }
+
+    const token = jwt.sign({ username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
+
+    res.status(200).json({ token });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
 });
 export default app;
