@@ -103,4 +103,24 @@ describe('Vehicle API Endpoints', () => {
     expect(response.body.price).toBe(24000);
     expect(response.body.quantity).toBe(5);
   });
+  it('should delete an existing vehicle via DELETE /api/vehicles/:id', async () => {
+    // Seed a vehicle to delete
+    await request(app).post('/api/vehicles').send({
+      id: 'v-del-1',
+      make: 'Nissan',
+      model: 'Altima',
+      category: 'Sedan',
+      price: 19000,
+      quantity: 2
+    });
+
+    // Delete the vehicle
+    const deleteResponse = await request(app).delete('/api/vehicles/v-del-1');
+    expect(deleteResponse.status).toBe(200);
+
+    // Verify it is removed by attempting to fetch all vehicles
+    const getResponse = await request(app).get('/api/vehicles');
+    const found = getResponse.body.find((v: any) => v.id === 'v-del-1');
+    expect(found).toBeUndefined();
+  });
 });

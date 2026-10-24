@@ -65,4 +65,17 @@ app.put('/api/vehicles/:id', (req: Request, res: Response) => {
   res.status(200).json(vehicle);
 });
 
+// Endpoint to delete a vehicle (DELETE - Admin only)
+app.delete('/api/vehicles/:id', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const index = vehicles.findIndex((v) => v.id === id);
+
+  if (index === -1) {
+    return res.status(404).json({ message: 'Vehicle not found' });
+  }
+
+  vehicles.splice(index, 1);
+  res.status(200).json({ message: 'Vehicle deleted successfully' });
+});
+
 export default app;
