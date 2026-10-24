@@ -146,4 +146,23 @@ describe('Vehicle API Endpoints', () => {
     const failedResponse = await request(app).post('/api/vehicles/v-purchase-1/purchase');
     expect(failedResponse.status).toBe(400);
   });
+  it('should restock a vehicle and increase its quantity via POST /api/vehicles/:id/restock', async () => {
+    // Seed a vehicle with quantity 3
+    await request(app).post('/api/vehicles').send({
+      id: 'v-restock-1',
+      make: 'Subaru',
+      model: 'Outback',
+      category: 'SUV',
+      price: 32000,
+      quantity: 3
+    });
+
+    // Restock the vehicle adding 5 units
+    const restockResponse = await request(app)
+      .post('/api/vehicles/v-restock-1/restock')
+      .send({ quantity: 5 });
+
+    expect(restockResponse.status).toBe(200);
+    expect(restockResponse.body.quantity).toBe(8); // 3 + 5
+  });
 });

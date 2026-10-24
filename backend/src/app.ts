@@ -93,5 +93,20 @@ app.post('/api/vehicles/:id/purchase', (req: Request, res: Response) => {
   vehicle.quantity -= 1;
   res.status(200).json(vehicle);
 });
+// Endpoint to restock a vehicle (increasing quantity - Admin only)
+app.post('/api/vehicles/:id/restock', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { quantity } = req.body;
 
+  const vehicle = vehicles.find((v) => v.id === id);
+
+  if (!vehicle) {
+    return res.status(404).json({ message: 'Vehicle not found' });
+  }
+
+  const addAmount = Number(quantity) || 0;
+  vehicle.quantity += addAmount;
+
+  res.status(200).json(vehicle);
+});
 export default app;
