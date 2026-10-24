@@ -2,6 +2,7 @@ import request from 'supertest';
 import app from './app'; 
 
 describe('Vehicle API Endpoints', () => {
+  // 1. POST /api/vehicles
   it('should create a new vehicle via POST /api/vehicles', async () => {
     const newVehicleData = {
       id: 'v-1',
@@ -20,6 +21,7 @@ describe('Vehicle API Endpoints', () => {
     expect(response.body).toMatchObject(newVehicleData);
   });
 
+  // 2. GET /api/vehicles
   it('should retrieve a list of all vehicles via GET /api/vehicles', async () => {
     const vehicleData = {
       id: 'v-get-1',
@@ -43,9 +45,8 @@ describe('Vehicle API Endpoints', () => {
     expect(retrievedVehicle.model).toBe('Elantra');
   });
 
-  // NEW TEST: Search vehicles by make, model, category, or price range
+  // 3. GET /api/vehicles/search
   it('should search for vehicles by make, category, and price range via GET /api/vehicles/search', async () => {
-    // Seed a couple of vehicles for searching
     await request(app).post('/api/vehicles').send({
       id: 'v-search-1',
       make: 'Toyota',
@@ -64,7 +65,6 @@ describe('Vehicle API Endpoints', () => {
       quantity: 8
     });
 
-    // Search for Toyota SUVs with a price between 25000 and 35000
     const response = await request(app)
       .get('/api/vehicles/search')
       .query({ make: 'Toyota', category: 'SUV', minPrice: 25000, maxPrice: 35000 });
@@ -73,5 +73,34 @@ describe('Vehicle API Endpoints', () => {
     expect(Array.isArray(response.body)).toBe(true);
     expect(response.body.length).toBe(1);
     expect(response.body[0].model).toBe('RAV4');
+  });
+
+  // 4. PUT /api/vehicles/:id
+  it('should update an existing vehicle via PUT /api/vehicles/:id', async () => {
+    await request(app).post('/api/vehicles').send({
+      id: 'v-update-1',
+      make: 'Ford',
+      model: 'Focus',
+      category: 'Hatchback',
+      price: 18000,
+      quantity: 3
+    });
+
+    const updatedData = {
+      make: 'Ford',
+      model: 'Focus ST',
+      category: 'Hatchback',
+      price: 24000,
+      quantity: 5
+    };
+
+    const response = await request(app)
+      .put('/api/vehicles/v-update-1')
+      .send(updatedData);
+
+    expect(response.status).toBe(200);
+    expect(response.body.model).toBe('Focus ST');
+    expect(response.body.price).toBe(24000);
+    expect(response.body.quantity).toBe(5);
   });
 });

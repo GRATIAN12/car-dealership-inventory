@@ -3,13 +3,11 @@ import { Vehicle } from './vehicle';
 
 const app = express();
 
-// Middleware to parse incoming JSON data
 app.use(express.json());
 
-// In-memory array to simulate our database for now
 const vehicles: Vehicle[] = [];
 
-// Endpoint to add a new vehicle (POST)
+// 1. Add a new vehicle (POST)
 app.post('/api/vehicles', (req: Request, res: Response) => {
   const { id, make, model, category, price, quantity } = req.body;
   const newVehicle = new Vehicle(id, make, model, category, price, quantity);
@@ -17,12 +15,12 @@ app.post('/api/vehicles', (req: Request, res: Response) => {
   res.status(201).json(newVehicle);
 });
 
-// Endpoint to retrieve all vehicles (GET)
+// 2. Retrieve all vehicles (GET)
 app.get('/api/vehicles', (req: Request, res: Response) => {
   res.status(200).json(vehicles);
 });
 
-// NEW: Endpoint to search vehicles by make, model, category, or price range (GET)
+// 3. Search vehicles by make, model, category, or price range (GET)
 app.get('/api/vehicles/search', (req: Request, res: Response) => {
   const { make, model, category, minPrice, maxPrice } = req.query;
 
@@ -46,6 +44,25 @@ app.get('/api/vehicles/search', (req: Request, res: Response) => {
   });
 
   res.status(200).json(filteredVehicles);
+});
+
+// 4. Update an existing vehicle (PUT)
+app.put('/api/vehicles/:id', (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { make, model, category, price, quantity } = req.body;
+
+  const vehicle = vehicles.find((v) => v.id === id);
+  if (!vehicle) {
+    return res.status(404).json({ message: 'Vehicle not found' });
+  }
+
+  if (make !== undefined) vehicle.make = make;
+  if (model !== undefined) vehicle.model = model;
+  if (category !== undefined) vehicle.category = category;
+  if (price !== undefined) vehicle.price = price;
+  if (quantity !== undefined) vehicle.quantity = quantity;
+
+  res.status(200).json(vehicle);
 });
 
 export default app;
