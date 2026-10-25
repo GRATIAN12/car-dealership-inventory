@@ -1,6 +1,7 @@
 import sqlite3 from 'sqlite3';
 
-const dbFile = './database.sqlite';
+// Use a fresh in-memory database when running tests so they never touch real data
+const dbFile = process.env.NODE_ENV === 'test' ? ':memory:' : './database.sqlite';
 const db = new sqlite3.Database(dbFile, (err) => {
   if (err) {
     console.error('Error opening database', err.message);

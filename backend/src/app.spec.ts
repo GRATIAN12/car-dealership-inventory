@@ -1,6 +1,15 @@
 import request from 'supertest';
 import app from './app'; 
 
+let token: string;
+
+beforeAll(async () => {
+  // Create an admin user and log in once; all protected routes reuse this token
+  await request(app).post('/api/auth/register').send({ username: 'specadmin', password: 'password123', role: 'admin' });
+  const loginRes = await request(app).post('/api/auth/login').send({ username: 'specadmin', password: 'password123' });
+  token = loginRes.body.token;
+});
+
 describe('Vehicle API Endpoints', () => {
   // 1. POST /api/vehicles
   it('should create a new vehicle via POST /api/vehicles', async () => {
@@ -14,7 +23,7 @@ describe('Vehicle API Endpoints', () => {
     };
 
     const response = await request(app)
-      .post('/api/vehicles')
+      .post('/api/vehicles').set('Authorization', `Bearer ${token}`)
       .send(newVehicleData);
 
     expect(response.status).toBe(201);
@@ -32,7 +41,7 @@ describe('Vehicle API Endpoints', () => {
       quantity: 5
     };
 
-    await request(app).post('/api/vehicles').send(vehicleData);
+    await request(app).post('/api/vehicles').set('Authorization', `Bearer ${token}`).send(vehicleData);
 
     const response = await request(app).get('/api/vehicles');
 
@@ -47,7 +56,7 @@ describe('Vehicle API Endpoints', () => {
 
   // 3. GET /api/vehicles/search
   it('should search for vehicles by make, category, and price range via GET /api/vehicles/search', async () => {
-    await request(app).post('/api/vehicles').send({
+    await request(app).post('/api/vehicles').set('Authorization', `Bearer ${token}`).send({
       id: 'v-search-1',
       make: 'Toyota',
       model: 'RAV4',
@@ -56,7 +65,7 @@ describe('Vehicle API Endpoints', () => {
       quantity: 4
     });
 
-    await request(app).post('/api/vehicles').send({
+    await request(app).post('/api/vehicles').set('Authorization', `Bearer ${token}`).send({
       id: 'v-search-2',
       make: 'Toyota',
       model: 'Corolla',
@@ -77,7 +86,7 @@ describe('Vehicle API Endpoints', () => {
 
   // 4. PUT /api/vehicles/:id
   it('should update an existing vehicle via PUT /api/vehicles/:id', async () => {
-    await request(app).post('/api/vehicles').send({
+    await request(app).post('/api/vehicles').set('Authorization', `Bearer ${token}`).send({
       id: 'v-update-1',
       make: 'Ford',
       model: 'Focus',
@@ -95,7 +104,7 @@ describe('Vehicle API Endpoints', () => {
     };
 
     const response = await request(app)
-      .put('/api/vehicles/v-update-1')
+      .put('/api/vehicles/v-update-1').set('Authorization', `Bearer ${token}`)
       .send(updatedData);
 
     expect(response.status).toBe(200);
@@ -111,7 +120,7 @@ describe('Vehicle API Endpoints', () => {
     const token = loginRes.body.token;
 
     // Seed a vehicle to delete
-    await request(app).post('/api/vehicles').send({
+    await request(app).post('/api/vehicles').set('Authorization', `Bearer ${token}`).send({
       id: 'v-del-1',
       make: 'Nissan',
       model: 'Altima',
@@ -134,7 +143,7 @@ describe('Vehicle API Endpoints', () => {
 
   it('should purchase a vehicle and decrease its quantity via POST /api/vehicles/:id/purchase', async () => {
     // Seed a vehicle with quantity 2
-    await request(app).post('/api/vehicles').send({
+    await request(app).post('/api/vehicles').set('Authorization', `Bearer ${token}`).send({
       id: 'v-purchase-1',
       make: 'Mazda',
       model: 'Mazda3',
@@ -144,15 +153,15 @@ describe('Vehicle API Endpoints', () => {
     });
 
     // Purchase the vehicle
-    const purchaseResponse = await request(app).post('/api/vehicles/v-purchase-1/purchase');
+    const purchaseResponse = await request(app).post('/api/vehicles/v-purchase-1/purchase').set('Authorization', `Bearer ${token}`);
     expect(purchaseResponse.status).toBe(200);
     expect(purchaseResponse.body.quantity).toBe(1);
 
     // Purchase again until quantity is 0
-    await request(app).post('/api/vehicles/v-purchase-1/purchase');
+    await request(app).post('/api/vehicles/v-purchase-1/purchase').set('Authorization', `Bearer ${token}`);
 
     // Attempting to purchase when quantity is 0 should fail with 400 Bad Request
-    const failedResponse = await request(app).post('/api/vehicles/v-purchase-1/purchase');
+    const failedResponse = await request(app).post('/api/vehicles/v-purchase-1/purchase').set('Authorization', `Bearer ${token}`);
     expect(failedResponse.status).toBe(400);
   });
 
@@ -163,7 +172,7 @@ describe('Vehicle API Endpoints', () => {
     const token = loginRes.body.token;
 
     // Seed a vehicle with quantity 3
-    await request(app).post('/api/vehicles').send({
+    await request(app).post('/api/vehicles').set('Authorization', `Bearer ${token}`).send({
       id: 'v-restock-1',
       make: 'Subaru',
       model: 'Outback',
