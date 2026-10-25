@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
-  },
+  "test": "jest",
+  "start": "ts-node src/app.ts"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -20,6 +21,7 @@
     "jest": "^30.5.2",
     "supertest": "^7.3.1",
     "ts-jest": "^29.4.15",
+    "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   },
   "dependencies": {
